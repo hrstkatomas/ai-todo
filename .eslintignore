@@ -1,0 +1,8 @@
+# libraries
+/node_modules
+
+# components
+/src/components
+
+# configs
+/*.js
