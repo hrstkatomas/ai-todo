@@ -1,39 +1,37 @@
-import logo from "./logo.svg";
-import "./App.css";
-import { BearCounter } from "./BearCounter";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { TodoInput } from "@/TodoInput";
+import { VoiceInput } from "@/VoiceInput";
+import { TodoList } from "@/TodoList";
+import { useStore } from "@/store";
+import classNames from "classnames";
 
-function App() {
+export function App() {
+	const todoLists = useStore((state) => state.todoLists);
+
 	return (
-		<div className="App">
-			<header className="App-header">
-				<img src={logo} className="App-logo" alt="logo" />
-				<p>
-					Edit <code>src/App.tsx</code> and save to reload.
-				</p>
-				<a className="App-link" href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-					Learn React
-				</a>
-				<div>
-					<BearCounter />
-					<BearCounter />
+		<div className={classNames("flex", "flex-col", "h-screen")}>
+			<header className={classNames("bg-gray-900", "text-white", "py-4", "px-6")}>
+				<div className={classNames("flex", "items-center", "justify-between")}>
+					<h1 className={classNames("text-2xl", "font-bold")}>Todo List</h1>
+					<div className={classNames("flex", "items-center", "space-x-2")}>
+						<TodoInput />
+						<VoiceInput />
+					</div>
 				</div>
 			</header>
-
-			<Card className="w-[350px]">
-				<CardHeader>
-					<CardTitle>Card Title</CardTitle>
-					<CardDescription>Card Description</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<p>Card Content</p>
-				</CardContent>
-				<CardFooter>
-					<p>Card Footer</p>
-				</CardFooter>
-			</Card>
+			<div
+				className={classNames(
+					"flex-1",
+					"overflow-auto",
+					"p-6",
+					"grid",
+					"grid-cols-[repeat(auto-fit,minmax(300px,1fr))]",
+					"gap-6",
+				)}
+			>
+				{todoLists.map((todoList) => (
+					<TodoList key={todoList.id} {...todoList} />
+				))}
+			</div>
 		</div>
 	);
 }
-
-export default App;
