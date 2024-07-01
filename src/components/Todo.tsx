@@ -1,6 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import classNames from "classnames";
-import { type Todo as TodoType } from "./store";
+import { type Todo as TodoType } from "../store";
 
 export interface TodoProps extends TodoType {
 	index: number;

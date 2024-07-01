@@ -1,5 +1,5 @@
 import { type TodoList as TodoListType, useStore } from "@/store";
-import { Todo } from "@/Todo";
+import { Todo } from "@/components/Todo";
 import classNames from "classnames";
 
 interface TodoListProps extends TodoListType {}

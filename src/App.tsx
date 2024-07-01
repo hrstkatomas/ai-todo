@@ -1,6 +1,6 @@
-import { TodoInput } from "@/TodoInput";
-import { VoiceInput } from "@/VoiceInput";
-import { TodoList } from "@/TodoList";
+import { TodoInput } from "@/components/TodoInput";
+import { VoiceInput } from "@/components/VoiceInput";
+import { TodoList } from "@/components/TodoList";
 import { useStore } from "@/store";
 import classNames from "classnames";
 
