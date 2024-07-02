@@ -1,8 +1,8 @@
 # libraries
 /node_modules
 
-# components
-/src/components
+# shadcn components
+/src/components/ui
 
 # configs
 /*.js

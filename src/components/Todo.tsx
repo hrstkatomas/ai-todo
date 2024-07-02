@@ -1,6 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import classNames from "classnames";
 import { type Todo as TodoType } from "../store";
+import { clsx } from "clsx";
 
 export interface TodoProps extends TodoType {
 	index: number;
@@ -12,7 +12,7 @@ export function Todo({ id, index, title, completed, handleDragDrop, handleTodoCo
 	return (
 		<div
 			key={id}
-			className={classNames(
+			className={clsx(
 				`bg-gray-100`,
 				`rounded-lg`,
 				`p-4`,
@@ -31,11 +31,11 @@ export function Todo({ id, index, title, completed, handleDragDrop, handleTodoCo
 				handleDragDrop(dropIndex, index);
 			}}
 		>
-			<div className={classNames("flex", "items-center")}>
+			<div className={clsx("flex", "items-center")}>
 				<Checkbox id={`todo-${id}`} checked={completed} onCheckedChange={handleTodoComplete} />
 				<label
 					htmlFor={`todo-${id}`}
-					className={classNames(`ml-3`, `text-lg`, `font-bold`, { "line-through text-gray-500": completed })}
+					className={clsx(`ml-3`, `text-lg`, `font-bold`, { "line-through text-gray-500": completed })}
 				>
 					{title}
 				</label>

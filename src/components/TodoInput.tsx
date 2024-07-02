@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
 import { useStore } from "@/store";
+import { clsx } from "clsx";
 
 export function TodoInput() {
 	const [newTodoTitle, setNewTodoTitle] = useState("");
@@ -21,11 +22,11 @@ export function TodoInput() {
 				onKeyDown={(e) => {
 					if (e.key === "Enter") handleNewTodoSubmit();
 				}}
-				className="bg-gray-800 text-white px-4 py-2 rounded-md"
+				className={clsx("bg-gray-800", "text-white", "px-4", "py-2", "rounded-md")}
 			/>
 			<button
 				onClick={handleNewTodoSubmit}
-				className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+				className={clsx("bg-gray-800", "hover:bg-gray-700", "text-white", "px-4", "py-2", "rounded-md")}
 			>
 				<PlusIcon className="h-6 w-6" />
 			</button>

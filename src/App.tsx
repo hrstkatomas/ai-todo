@@ -2,24 +2,24 @@ import { TodoInput } from "@/components/TodoInput";
 import { VoiceInput } from "@/components/VoiceInput";
 import { TodoList } from "@/components/TodoList";
 import { useStore } from "@/store";
-import classNames from "classnames";
+import { clsx } from "clsx";
 
 export function App() {
 	const todoLists = useStore((state) => state.todoLists);
 
 	return (
-		<div className={classNames("flex", "flex-col", "h-screen")}>
-			<header className={classNames("bg-gray-900", "text-white", "py-4", "px-6")}>
-				<div className={classNames("flex", "items-center", "justify-between")}>
-					<h1 className={classNames("text-2xl", "font-bold")}>Todo List</h1>
-					<div className={classNames("flex", "items-center", "space-x-2")}>
+		<div className={clsx("flex", "flex-col", "h-screen")}>
+			<header className={clsx("bg-gray-900", "text-white", "py-4", "px-6")}>
+				<div className={clsx("flex", "items-center", "justify-between")}>
+					<h1 className={clsx("text-2xl", "font-bold")}>Todo List</h1>
+					<div className={clsx("flex", "items-center", "space-x-2")}>
 						<TodoInput />
 						<VoiceInput />
 					</div>
 				</div>
 			</header>
 			<div
-				className={classNames(
+				className={clsx(
 					"flex-1",
 					"overflow-auto",
 					"p-6",
