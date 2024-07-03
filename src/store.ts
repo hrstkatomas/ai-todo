@@ -23,6 +23,8 @@ type State = {
 };
 
 type Action = {
+	dispatch: (args: ReducerActions) => void;
+
 	addTodoList: (name: string) => void;
 	addTodo: (todoListId: Id, title: string) => void;
 	completeTodo: (todoListId: Id, todoId: Id) => void;
@@ -42,51 +44,43 @@ const initialState: State = {
 				},
 			],
 		},
-		{
-			id: uuidv4(),
-			name: 'Sarah',
-			todos: [
-				{
-					id: uuidv4(),
-					title: 'Schedule team meeting',
-					completed: false,
-				},
-			],
-		},
-		{
-			id: uuidv4(),
-			name: 'Alex',
-			todos: [
-				{
-					id: uuidv4(),
-					title: 'Research new software tools',
-					completed: false,
-				},
-			],
-		},
-		{
-			id: uuidv4(),
-			name: 'Emily',
-			todos: [
-				{
-					id: uuidv4(),
-					title: 'Update company website',
-					completed: false,
-				},
-			],
-		},
 	],
 };
 
-export const useStore = create<State & Action>((set) => ({
-	...initialState,
+type ReducerActions =
+	| {
+			type: 'ADD_TODO_LIST';
+			name: string;
+	  }
+	| {
+			type: 'ADD_TODO';
+			todoListId: Id;
+			title: string;
+	  }
+	| {
+			type: 'COMPLETE_TODO';
+			todoListId: Id;
+			todoId: Id;
+	  }
+	| {
+			type: 'DRAG_DROP_TODO_REORDER';
+			todoListId: Id;
+			sourceIndex: number;
+			destinationIndex: number;
+	  };
 
-	addTodoList: (name) =>
-		set((state) => ({ ...state, todoLists: [...state.todoLists, { id: uuidv4(), name, todos: [] }] })),
+type Reducer = (state: State, action: ReducerActions) => State;
 
-	addTodo: (todoListId, title) =>
-		set((state) => {
-			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
+const reducer: Reducer = (state, action) => {
+	switch (action.type) {
+		case 'ADD_TODO_LIST':
+			return { ...state, todoLists: [...state.todoLists, { id: uuidv4(), name: action.name, todos: [] }] };
+
+		case 'ADD_TODO': {
+			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(
+				state.todoLists,
+				action.todoListId,
+			);
 
 			const newMiddleTodoList: TodoList = {
 				...todoListToAlter,
@@ -95,47 +89,52 @@ export const useStore = create<State & Action>((set) => ({
 					{
 						id: uuidv4(),
 						completed: false,
-						title,
+						title: action.title,
 					},
 				],
 			};
 
 			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
-		}),
+		}
 
-	completeTodo: (todoListId, todoId) => {
-		set((state) => {
-			const [startOfTodoList, todoListToAlter, endOfTodoList] = splitArrayByIdentifiable(
+		case 'COMPLETE_TODO': {
+			{
+				const [startOfTodoList, todoListToAlter, endOfTodoList] = splitArrayByIdentifiable(
+					state.todoLists,
+					action.todoListId,
+				);
+
+				const [startOfTodos, todoToComplete, endOfTodos] = splitArrayByIdentifiable(
+					todoListToAlter.todos,
+					action.todoId,
+				);
+
+				const newMiddleTodoList: TodoList = {
+					...todoListToAlter,
+					todos: [
+						...startOfTodos,
+						{
+							...todoToComplete,
+							completed: !todoToComplete.completed,
+						},
+						...endOfTodos,
+					],
+				};
+
+				return { ...state, todoLists: [...startOfTodoList, newMiddleTodoList, ...endOfTodoList] };
+			}
+		}
+
+		case 'DRAG_DROP_TODO_REORDER': {
+			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(
 				state.todoLists,
-				todoListId,
+				action.todoListId,
 			);
-
-			const [startOfTodos, todoToComplete, endOfTodos] = splitArrayByIdentifiable(todoListToAlter.todos, todoId);
-
-			const newMiddleTodoList: TodoList = {
-				...todoListToAlter,
-				todos: [
-					...startOfTodos,
-					{
-						...todoToComplete,
-						completed: !todoToComplete.completed,
-					},
-					...endOfTodos,
-				],
-			};
-
-			return { ...state, todoLists: [...startOfTodoList, newMiddleTodoList, ...endOfTodoList] };
-		});
-	},
-
-	dragDropTodoReorder: (todoListId, sourceIndex, destinationIndex) => {
-		set((state) => {
-			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
 
 			// Mutations are yucky... but splice has convinient interface for this
 			const updatedTodos = [...todoListToAlter.todos];
-			const [removed] = updatedTodos.splice(sourceIndex, 1);
-			updatedTodos.splice(destinationIndex, 0, removed);
+			const [removed] = updatedTodos.splice(action.sourceIndex, 1);
+			updatedTodos.splice(action.destinationIndex, 0, removed);
 
 			const newMiddleTodoList: TodoList = {
 				...todoListToAlter,
@@ -143,6 +142,18 @@ export const useStore = create<State & Action>((set) => ({
 			};
 
 			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
-		});
-	},
+		}
+	}
+};
+
+export const useStore = create<State & Action>((set, get) => ({
+	...initialState,
+
+	dispatch: (args: ReducerActions) => set((state) => reducer(state, args)),
+
+	addTodoList: (name) => get().dispatch({ type: 'ADD_TODO_LIST', name }),
+	addTodo: (todoListId, title) => get().dispatch({ type: 'ADD_TODO', todoListId, title }),
+	completeTodo: (todoListId, todoId) => get().dispatch({ type: 'COMPLETE_TODO', todoListId, todoId }),
+	dragDropTodoReorder: (todoListId, sourceIndex, destinationIndex) =>
+		get().dispatch({ type: 'DRAG_DROP_TODO_REORDER', todoListId, sourceIndex, destinationIndex }),
 }));
