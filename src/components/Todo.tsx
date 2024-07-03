@@ -1,6 +1,6 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { type Todo as TodoType } from "../store";
-import { clsx } from "clsx";
+import { Checkbox } from '@/components/ui/checkbox';
+import { clsx } from 'clsx';
+import { type Todo as TodoType } from '../store';
 
 export interface TodoProps extends TodoType {
 	index: number;
@@ -20,22 +20,22 @@ export function Todo({ id, index, title, completed, handleDragDrop, handleTodoCo
 				`flex`,
 				`items-center`,
 				`justify-between`,
-				{ "opacity-50": completed },
+				{ 'opacity-50': completed },
 			)}
 			draggable
-			onDragStart={(e) => e.dataTransfer.setData("text/plain", String(index))}
+			onDragStart={(e) => e.dataTransfer.setData('text/plain', String(index))}
 			onDragOver={(e) => e.preventDefault()}
 			onDrop={(e) => {
 				e.preventDefault();
-				const dropIndex = parseInt(e.dataTransfer.getData("text/plain"));
+				const dropIndex = parseInt(e.dataTransfer.getData('text/plain'));
 				handleDragDrop(dropIndex, index);
 			}}
 		>
-			<div className={clsx("flex", "items-center")}>
+			<div className={clsx('flex', 'items-center')}>
 				<Checkbox id={`todo-${id}`} checked={completed} onCheckedChange={handleTodoComplete} />
 				<label
 					htmlFor={`todo-${id}`}
-					className={clsx(`ml-3`, `text-lg`, `font-bold`, { "line-through text-gray-500": completed })}
+					className={clsx(`ml-3`, `text-lg`, `font-bold`, { 'line-through text-gray-500': completed })}
 				>
 					{title}
 				</label>

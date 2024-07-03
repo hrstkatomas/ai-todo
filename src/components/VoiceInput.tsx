@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export function VoiceInput() {
 	const handleVoiceInput = async () => {
@@ -6,11 +6,11 @@ export function VoiceInput() {
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 			const mediaRecorder = new MediaRecorder(stream);
 			const chunks: Blob[] = [];
-			mediaRecorder.addEventListener("dataavailable", (event) => {
+			mediaRecorder.addEventListener('dataavailable', (event) => {
 				chunks.push(event.data);
 			});
-			mediaRecorder.addEventListener("stop", () => {
-				const blob = new Blob(chunks, { type: "audio/mpeg" });
+			mediaRecorder.addEventListener('stop', () => {
+				const blob = new Blob(chunks, { type: 'audio/mpeg' });
 				const audioUrl = URL.createObjectURL(blob);
 				const audio = new Audio(audioUrl);
 				audio.play();
@@ -27,7 +27,7 @@ export function VoiceInput() {
 				mediaRecorder.stop();
 			}, 3000);
 		} catch (error) {
-			console.error("Error recording audio:", error);
+			console.error('Error recording audio:', error);
 		}
 	};
 

@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { v4 as uuidv4 } from "uuid";
-import { splitArrayByIdentifiable } from "@/lib/splitArrayByIdentifiable";
+import { splitArrayByIdentifiable } from '@/lib/splitArrayByIdentifiable';
+import { v4 as uuidv4 } from 'uuid';
+import { create } from 'zustand';
 
 export type Id = string;
 
@@ -33,44 +33,44 @@ const initialState: State = {
 	todoLists: [
 		{
 			id: uuidv4(),
-			name: "John",
+			name: 'John',
 			todos: [
 				{
 					id: uuidv4(),
-					title: "Finish project proposal",
+					title: 'Finish project proposal',
 					completed: false,
 				},
 			],
 		},
 		{
 			id: uuidv4(),
-			name: "Sarah",
+			name: 'Sarah',
 			todos: [
 				{
 					id: uuidv4(),
-					title: "Schedule team meeting",
+					title: 'Schedule team meeting',
 					completed: false,
 				},
 			],
 		},
 		{
 			id: uuidv4(),
-			name: "Alex",
+			name: 'Alex',
 			todos: [
 				{
 					id: uuidv4(),
-					title: "Research new software tools",
+					title: 'Research new software tools',
 					completed: false,
 				},
 			],
 		},
 		{
 			id: uuidv4(),
-			name: "Emily",
+			name: 'Emily',
 			todos: [
 				{
 					id: uuidv4(),
-					title: "Update company website",
+					title: 'Update company website',
 					completed: false,
 				},
 			],

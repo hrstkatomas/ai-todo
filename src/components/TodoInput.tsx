@@ -1,10 +1,10 @@
-import { Input } from "@/components/ui/input";
-import React, { useState } from "react";
-import { useStore } from "@/store";
-import { clsx } from "clsx";
+import { Input } from '@/components/ui/input';
+import { useStore } from '@/store';
+import { clsx } from 'clsx';
+import React, { useState } from 'react';
 
 export function TodoInput() {
-	const [newTodoTitle, setNewTodoTitle] = useState("");
+	const [newTodoTitle, setNewTodoTitle] = useState('');
 
 	const todoLists = useStore((state) => state.todoLists);
 	const addTodo = useStore((actions) => actions.addTodo.bind(null, todoLists[0].id));
@@ -20,13 +20,13 @@ export function TodoInput() {
 				value={newTodoTitle}
 				onChange={(e) => setNewTodoTitle(e.target.value)}
 				onKeyDown={(e) => {
-					if (e.key === "Enter") handleNewTodoSubmit();
+					if (e.key === 'Enter') handleNewTodoSubmit();
 				}}
-				className={clsx("bg-gray-800", "text-white", "px-4", "py-2", "rounded-md")}
+				className={clsx('bg-gray-800', 'text-white', 'px-4', 'py-2', 'rounded-md')}
 			/>
 			<button
 				onClick={handleNewTodoSubmit}
-				className={clsx("bg-gray-800", "hover:bg-gray-700", "text-white", "px-4", "py-2", "rounded-md")}
+				className={clsx('bg-gray-800', 'hover:bg-gray-700', 'text-white', 'px-4', 'py-2', 'rounded-md')}
 			>
 				<PlusIcon className="h-6 w-6" />
 			</button>
