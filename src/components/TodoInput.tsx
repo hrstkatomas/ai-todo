@@ -1,16 +1,19 @@
 import { Input } from '@/components/ui/input';
+import { askAgent } from '@/lib/aiAgent';
 import { useStore } from '@/store';
 import { clsx } from 'clsx';
 import React, { useState } from 'react';
 
 export function TodoInput() {
+	// TODO: Rename to PromptInput
 	const [newTodoTitle, setNewTodoTitle] = useState('');
 
 	const todoLists = useStore((state) => state.todoLists);
-	const addTodo = useStore((actions) => actions.addTodo.bind(null, todoLists[0].id));
+	const dispatch = useStore((actions) => actions.dispatch);
 
-	// TODO: this adds to the first list only for now. Redo this
-	const handleNewTodoSubmit = () => addTodo(newTodoTitle);
+	const handleNewTodoSubmit = () => {
+		askAgent(newTodoTitle, { todoLists }, dispatch);
+	};
 
 	return (
 		<>

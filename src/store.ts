@@ -1,26 +1,13 @@
+import { AllActions, Id, State, Todo, TodoList } from '@/lib/aiAgentTools';
 import { splitArrayByIdentifiable } from '@/lib/splitArrayByIdentifiable';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import { create } from 'zustand';
 
-export type Id = string;
-
-export interface Identifiable {
-	id: Id;
-}
-
-export interface Todo extends Identifiable {
-	title: string;
-	completed: boolean;
-}
-
-export interface TodoList extends Identifiable {
-	name: string;
-	todos: Todo[];
-}
-
-type State = {
-	todoLists: TodoList[];
-};
+export type Id = z.infer<typeof Id>;
+type TodoList = z.infer<typeof TodoList>;
+type State = z.infer<typeof State>;
+type ReducerActions = z.infer<typeof AllActions>;
 
 type Action = {
 	dispatch: (args: ReducerActions) => void;
@@ -46,28 +33,6 @@ const initialState: State = {
 		},
 	],
 };
-
-type ReducerActions =
-	| {
-			type: 'ADD_TODO_LIST';
-			name: string;
-	  }
-	| {
-			type: 'ADD_TODO';
-			todoListId: Id;
-			title: string;
-	  }
-	| {
-			type: 'COMPLETE_TODO';
-			todoListId: Id;
-			todoId: Id;
-	  }
-	| {
-			type: 'DRAG_DROP_TODO_REORDER';
-			todoListId: Id;
-			sourceIndex: number;
-			destinationIndex: number;
-	  };
 
 type Reducer = (state: State, action: ReducerActions) => State;
 
