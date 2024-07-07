@@ -9,10 +9,10 @@ export function TodoInput() {
 	const [newTodoTitle, setNewTodoTitle] = useState('');
 
 	const todoLists = useStore((state) => state.todoLists);
-	const dispatch = useStore((actions) => actions.dispatch);
+	const actions = useStore();
 
 	const handleNewTodoSubmit = () => {
-		askAgent(newTodoTitle, { todoLists }, dispatch);
+		askAgent(newTodoTitle, { todoLists }, actions);
 	};
 
 	return (

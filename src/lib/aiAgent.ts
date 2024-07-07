@@ -1,4 +1,4 @@
-import { AllActions, State } from '@/lib/aiAgentTools';
+import { Action, State } from '@/store';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText, tool } from 'ai';
 import { z } from 'zod';
@@ -8,11 +8,9 @@ const openai = createOpenAI({
 	apiKey: import.meta.env.PUBLIC_OPENAI_API_KEY,
 });
 
-export async function askAgent(
-	prompt: string,
-	currentState: z.infer<typeof State>,
-	dispatch: (action: z.infer<typeof AllActions>) => void,
-) {
+const Id = z.string().uuid();
+
+export async function askAgent(prompt: string, currentState: State, actions: Action) {
 	const { text } = await generateText({
 		model: openai('gpt-4-turbo'),
 		prompt: `
@@ -20,10 +18,41 @@ export async function askAgent(
 		Given the current state: ${JSON.stringify(currentState)}
 		`,
 		tools: {
-			updateState: tool({
-				description: 'Provide one or more actions that will update the state according to the given prompt',
-				parameters: z.object({ actions: z.array(AllActions) }),
-				execute: async ({ actions }) => actions.map((action) => dispatch(action)),
+			addTodoList: tool({
+				description: 'Add a todo list',
+				parameters: z.object({
+					name: z.string(),
+				}),
+				execute: async ({ name }) => actions.addTodoList(name),
+			}),
+
+			addTodo: tool({
+				description: 'Add a todo',
+				parameters: z.object({
+					todoListId: Id,
+					title: z.string(),
+				}),
+				execute: async ({ todoListId, title }) => actions.addTodo(todoListId, title),
+			}),
+
+			completedTodo: tool({
+				description: 'Complete a todo',
+				parameters: z.object({
+					todoListId: Id,
+					todoId: Id,
+				}),
+				execute: async ({ todoListId, todoId }) => actions.completeTodo(todoListId, todoId),
+			}),
+
+			reorder: tool({
+				description: 'Reorder todos',
+				parameters: z.object({
+					todoListId: Id,
+					sourceIndex: z.number(),
+					destinationIndex: z.number(),
+				}),
+				execute: async ({ todoListId, sourceIndex, destinationIndex }) =>
+					actions.dragDropTodoReorder(todoListId, sourceIndex, destinationIndex),
 			}),
 		},
 		toolChoice: 'required', // force the model to call a tool
