@@ -10,6 +10,20 @@ const openai = createOpenAI({
 
 const Id = z.string().uuid();
 
+const AddTodoAction = z.object({
+	todoListId: Id,
+	title: z.string(),
+});
+
+const CompleteToDoAction = z.object({
+	todoListId: Id,
+	todoId: Id,
+});
+
+// TODO: agent can call multiple tools in a single response, remove multiple tools from the same response
+// TODO: add actions to remove todos, todo lists, etc.
+// TODO: maybe dont force agent to call a tool, let it decide
+
 export async function askAgent(prompt: string, currentState: State, actions: Action) {
 	const { text } = await generateText({
 		model: openai('gpt-4-turbo'),
@@ -28,24 +42,34 @@ export async function askAgent(prompt: string, currentState: State, actions: Act
 
 			addTodo: tool({
 				description: 'Add a todo',
-				parameters: z.object({
-					todoListId: Id,
-					title: z.string(),
-				}),
+				parameters: AddTodoAction,
 				execute: async ({ todoListId, title }) => actions.addTodo(todoListId, title),
 			}),
 
-			completedTodo: tool({
-				description: 'Complete a todo',
+			addTodos: tool({
+				description: 'Add multiple todos',
 				parameters: z.object({
-					todoListId: Id,
-					todoId: Id,
+					todos: z.array(AddTodoAction),
 				}),
+				execute: async ({ todos }) => actions.addTodos(todos),
+			}),
+
+			completeTodo: tool({
+				description: 'Complete a todo',
+				parameters: CompleteToDoAction,
 				execute: async ({ todoListId, todoId }) => actions.completeTodo(todoListId, todoId),
 			}),
 
-			reorder: tool({
-				description: 'Reorder todos',
+			completeTodos: tool({
+				description: 'Complete multiple todos',
+				parameters: z.object({
+					todos: z.array(CompleteToDoAction),
+				}),
+				execute: async ({ todos }) => actions.completeTodos(todos),
+			}),
+
+			dragDropTodoReorder: tool({
+				description: 'Reorder todos in drag and drop fashion',
 				parameters: z.object({
 					todoListId: Id,
 					sourceIndex: z.number(),
@@ -53,6 +77,15 @@ export async function askAgent(prompt: string, currentState: State, actions: Act
 				}),
 				execute: async ({ todoListId, sourceIndex, destinationIndex }) =>
 					actions.dragDropTodoReorder(todoListId, sourceIndex, destinationIndex),
+			}),
+
+			reorder: tool({
+				description: 'Reorder todos by specifying if of the list and new order of todo ids',
+				parameters: z.object({
+					todoListId: Id,
+					newOrder: z.array(Id),
+				}),
+				execute: async ({ todoListId, newOrder }) => actions.reorder(todoListId, newOrder),
 			}),
 		},
 		toolChoice: 'required', // force the model to call a tool

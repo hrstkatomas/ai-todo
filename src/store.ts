@@ -25,15 +25,18 @@ export type State = {
 export type Action = {
 	addTodoList: (name: string) => void;
 	addTodo: (todoListId: Id, title: string) => void;
+	addTodos: (todos: { todoListId: Id; title: string }[]) => void;
 	completeTodo: (todoListId: Id, todoId: Id) => void;
+	completeTodos: (todos: { todoListId: Id; todoId: Id }[]) => void;
 	dragDropTodoReorder: (todoListId: Id, sourceIndex: number, destinationIndex: number) => void;
+	reorder: (todoListId: Id, newOrder: Id[]) => void;
 };
 
 const initialState: State = {
 	todoLists: [
 		{
 			id: uuidv4(),
-			name: 'John',
+			name: 'Me',
 			todos: [
 				{
 					id: uuidv4(),
@@ -45,7 +48,7 @@ const initialState: State = {
 	],
 };
 
-export const useStore = create<State & Action>((set) => ({
+export const useStore = create<State & Action>((set, get) => ({
 	...initialState,
 
 	addTodoList: (name) =>
@@ -70,6 +73,8 @@ export const useStore = create<State & Action>((set) => ({
 
 			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
 		}),
+
+	addTodos: (todos) => todos.forEach(({ todoListId, title }) => get().addTodo(todoListId, title)),
 
 	completeTodo: (todoListId, todoId) =>
 		set((state) => {
@@ -100,6 +105,8 @@ export const useStore = create<State & Action>((set) => ({
 			}
 		}),
 
+	completeTodos: (todos) => todos.forEach(({ todoListId, todoId }) => get().completeTodo(todoListId, todoId)),
+
 	dragDropTodoReorder: (todoListId, sourceIndex, destinationIndex) =>
 		set((state) => {
 			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
@@ -112,6 +119,20 @@ export const useStore = create<State & Action>((set) => ({
 			const newMiddleTodoList: TodoList = {
 				...todoListToAlter,
 				todos: updatedTodos,
+			};
+
+			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
+		}),
+
+	reorder: (todoListId, newOrder) =>
+		set((state) => {
+			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
+
+			const newMiddleTodoList: TodoList = {
+				...todoListToAlter,
+				todos: newOrder
+					.map((todoId) => todoListToAlter.todos.find((todo) => todo.id === todoId))
+					.filter((todo): todo is Todo => todo !== undefined),
 			};
 
 			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
