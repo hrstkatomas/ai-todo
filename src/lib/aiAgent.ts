@@ -10,18 +10,6 @@ const openai = createOpenAI({
 
 const Id = z.string().uuid();
 
-const AddTodoAction = z.object({
-	todoListId: Id,
-	title: z.string(),
-});
-
-const CompleteToDoAction = z.object({
-	todoListId: Id,
-	todoId: Id,
-});
-
-// TODO: agent can call multiple tools in a single response, remove multiple tools from the same response
-// TODO: add actions to remove todos, todo lists, etc.
 // TODO: maybe dont force agent to call a tool, let it decide
 
 export async function askAgent(prompt: string, currentState: State, actions: Action) {
@@ -33,59 +21,71 @@ export async function askAgent(prompt: string, currentState: State, actions: Act
 		`,
 		tools: {
 			addTodoList: tool({
-				description: 'Add a todo list',
+				description: 'Create empty todo list by giving it a name',
 				parameters: z.object({
 					name: z.string(),
 				}),
 				execute: async ({ name }) => actions.addTodoList(name),
 			}),
 
+			removeTodoList: tool({
+				description: 'Remove todo list by providing its id',
+				parameters: z.object({
+					todoListId: Id,
+				}),
+				execute: async ({ todoListId }) => actions.removeTodoList(todoListId),
+			}),
+
 			addTodo: tool({
-				description: 'Add a todo',
-				parameters: AddTodoAction,
+				description: 'Add a todo and assign it to a todo list',
+				parameters: z.object({
+					todoListId: Id,
+					title: z.string(),
+				}),
 				execute: async ({ todoListId, title }) => actions.addTodo(todoListId, title),
 			}),
 
-			addTodos: tool({
-				description: 'Add multiple todos',
+			removeTodo: tool({
+				description: 'Remove todo by providing its id',
 				parameters: z.object({
-					todos: z.array(AddTodoAction),
+					todoId: Id,
 				}),
-				execute: async ({ todos }) => actions.addTodos(todos),
+				execute: async ({ todoId }) => actions.removeTodo(todoId),
+			}),
+
+			addTodoListWithTodos: tool({
+				description: 'Create a todo list with multiple todos',
+				parameters: z.object({
+					name: z.string(),
+					todoTitles: z.array(z.string()),
+				}),
+				execute: async ({ name, todoTitles }) => actions.addTodoListWithTodos(name, todoTitles),
 			}),
 
 			completeTodo: tool({
-				description: 'Complete a todo',
-				parameters: CompleteToDoAction,
-				execute: async ({ todoListId, todoId }) => actions.completeTodo(todoListId, todoId),
-			}),
-
-			completeTodos: tool({
-				description: 'Complete multiple todos',
+				description: 'Will compelete selected todo.',
 				parameters: z.object({
-					todos: z.array(CompleteToDoAction),
+					todoId: Id,
 				}),
-				execute: async ({ todos }) => actions.completeTodos(todos),
+				execute: async ({ todoId }) => actions.completeTodo(todoId),
 			}),
 
 			dragDropTodoReorder: tool({
-				description: 'Reorder todos in drag and drop fashion',
+				description: 'You can specify two ids of todos that should swap places.',
 				parameters: z.object({
-					todoListId: Id,
-					sourceIndex: z.number(),
-					destinationIndex: z.number(),
+					sourceId: Id,
+					destinationId: Id,
 				}),
-				execute: async ({ todoListId, sourceIndex, destinationIndex }) =>
-					actions.dragDropTodoReorder(todoListId, sourceIndex, destinationIndex),
+				execute: async ({ sourceId, destinationId }) => actions.dragDropTodoReorder(sourceId, destinationId),
 			}),
 
+			// TODO: when agent forgets an id, it gets removed by the action ATM
 			reorder: tool({
-				description: 'Reorder todos by specifying if of the list and new order of todo ids',
+				description: 'Reorder todos by specifying new order of todo ids.',
 				parameters: z.object({
-					todoListId: Id,
 					newOrder: z.array(Id),
 				}),
-				execute: async ({ todoListId, newOrder }) => actions.reorder(todoListId, newOrder),
+				execute: async ({ newOrder }) => actions.reorder(newOrder),
 			}),
 		},
 		toolChoice: 'required', // force the model to call a tool

@@ -1,14 +1,13 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { clsx } from 'clsx';
-import { type Todo as TodoType } from '../store';
+import { Id, type Todo as TodoType } from '../store';
 
 export interface TodoProps extends TodoType {
-	index: number;
-	handleDragDrop: (dropIndex: number, initialIndex: number) => void;
+	handleDragDrop: (dropIndex: Id, initialIndex: Id) => void;
 	handleTodoComplete: () => void;
 }
 
-export function Todo({ id, index, title, completed, handleDragDrop, handleTodoComplete }: TodoProps) {
+export function Todo({ id, title, completed, handleDragDrop, handleTodoComplete }: TodoProps) {
 	return (
 		<div
 			key={id}
@@ -23,12 +22,11 @@ export function Todo({ id, index, title, completed, handleDragDrop, handleTodoCo
 				{ 'opacity-50': completed },
 			)}
 			draggable
-			onDragStart={(e) => e.dataTransfer.setData('text/plain', String(index))}
+			onDragStart={(e) => e.dataTransfer.setData('text/plain', id)}
 			onDragOver={(e) => e.preventDefault()}
 			onDrop={(e) => {
 				e.preventDefault();
-				const dropIndex = parseInt(e.dataTransfer.getData('text/plain'));
-				handleDragDrop(dropIndex, index);
+				handleDragDrop(e.dataTransfer.getData('text/plain'), id);
 			}}
 		>
 			<div className={clsx('flex', 'items-center')}>

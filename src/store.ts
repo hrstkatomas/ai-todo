@@ -4,46 +4,50 @@ import { create } from 'zustand';
 
 export type Id = string;
 
-type Identifiable = {
+export type Identifiable = {
 	id: Id;
 };
 
 export type Todo = Identifiable & {
 	title: string;
 	completed: boolean;
+	parentId: Id;
 };
 
 export type TodoList = Identifiable & {
 	name: string;
-	todos: Todo[];
 };
 
 export type State = {
 	todoLists: TodoList[];
+	todos: Todo[];
 };
 
 export type Action = {
 	addTodoList: (name: string) => void;
+	removeTodoList: (id: Id) => void;
 	addTodo: (todoListId: Id, title: string) => void;
-	addTodos: (todos: { todoListId: Id; title: string }[]) => void;
-	completeTodo: (todoListId: Id, todoId: Id) => void;
-	completeTodos: (todos: { todoListId: Id; todoId: Id }[]) => void;
-	dragDropTodoReorder: (todoListId: Id, sourceIndex: number, destinationIndex: number) => void;
-	reorder: (todoListId: Id, newOrder: Id[]) => void;
+	removeTodo: (id: Id) => void;
+	addTodoListWithTodos: (name: string, todoTitles: string[]) => void;
+	completeTodo: (todoId: Id) => void;
+	dragDropTodoReorder: (sourceIndex: Id, destinationIndex: Id) => void;
+	reorder: (newOrder: Id[]) => void;
 };
 
+const initialId = uuidv4();
 const initialState: State = {
 	todoLists: [
 		{
-			id: uuidv4(),
+			id: initialId,
 			name: 'Me',
-			todos: [
-				{
-					id: uuidv4(),
-					title: 'Finish project proposal',
-					completed: false,
-				},
-			],
+		},
+	],
+	todos: [
+		{
+			id: uuidv4(),
+			title: 'Finish project proposal',
+			completed: false,
+			parentId: initialId,
 		},
 	],
 };
@@ -54,43 +58,48 @@ export const useStore = create<State & Action>((set, get) => ({
 	addTodoList: (name) =>
 		set((state) => ({ ...state, todoLists: [...state.todoLists, { id: uuidv4(), name, todos: [] }] })),
 
-	// addTodo: (todoListId, title) => get().dispatch({ type: 'ADD_TODO', todoListId, title }),
+	removeTodoList: (id) =>
+		set((state) => {
+			const [startOfTodoLists, _, endOfTodoLists] = splitArrayByIdentifiable(state.todoLists, id);
+			return { ...state, todoLists: [...startOfTodoLists, ...endOfTodoLists] };
+		}),
+
 	addTodo: (todoListId, title) =>
 		set((state) => {
-			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
-
-			const newMiddleTodoList: TodoList = {
-				...todoListToAlter,
+			return {
+				...state,
 				todos: [
-					...todoListToAlter.todos,
+					...state.todos,
 					{
 						id: uuidv4(),
 						completed: false,
 						title: title,
+						parentId: todoListId,
 					},
 				],
 			};
-
-			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
 		}),
 
-	addTodos: (todos) => todos.forEach(({ todoListId, title }) => get().addTodo(todoListId, title)),
+	removeTodo: (id) =>
+		set((state) => {
+			const [startOfTodos, _, endOfTodos] = splitArrayByIdentifiable(state.todos, id);
+			return { ...state, todos: [...startOfTodos, ...endOfTodos] };
+		}),
 
-	completeTodo: (todoListId, todoId) =>
+	addTodoListWithTodos: (name, todoTitles) => {
+		get().addTodoList(name);
+		const todoLists = get().todoLists;
+		const addedTodoListId = todoLists[todoLists.length - 1].id;
+		todoTitles.forEach((title) => get().addTodo(addedTodoListId, title));
+	},
+
+	completeTodo: (todoId) =>
 		set((state) => {
 			{
-				const [startOfTodoList, todoListToAlter, endOfTodoList] = splitArrayByIdentifiable(
-					state.todoLists,
-					todoListId,
-				);
+				const [startOfTodos, todoToComplete, endOfTodos] = splitArrayByIdentifiable(state.todos, todoId);
 
-				const [startOfTodos, todoToComplete, endOfTodos] = splitArrayByIdentifiable(
-					todoListToAlter.todos,
-					todoId,
-				);
-
-				const newMiddleTodoList: TodoList = {
-					...todoListToAlter,
+				return {
+					...state,
 					todos: [
 						...startOfTodos,
 						{
@@ -100,41 +109,33 @@ export const useStore = create<State & Action>((set, get) => ({
 						...endOfTodos,
 					],
 				};
-
-				return { ...state, todoLists: [...startOfTodoList, newMiddleTodoList, ...endOfTodoList] };
 			}
 		}),
 
-	completeTodos: (todos) => todos.forEach(({ todoListId, todoId }) => get().completeTodo(todoListId, todoId)),
-
-	dragDropTodoReorder: (todoListId, sourceIndex, destinationIndex) =>
+	dragDropTodoReorder: (sourceId, destinationId) =>
 		set((state) => {
-			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
-
 			// Mutations are yucky... but splice has convinient interface for this
-			const updatedTodos = [...todoListToAlter.todos];
+			const updatedTodos = [...state.todos];
+
+			const sourceIndex = updatedTodos.findIndex((todo) => todo.id === sourceId);
+			const destinationIndex = updatedTodos.findIndex((todo) => todo.id === destinationId);
+
 			const [removed] = updatedTodos.splice(sourceIndex, 1);
 			updatedTodos.splice(destinationIndex, 0, removed);
 
-			const newMiddleTodoList: TodoList = {
-				...todoListToAlter,
+			return {
+				...state,
 				todos: updatedTodos,
 			};
-
-			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
 		}),
 
-	reorder: (todoListId, newOrder) =>
+	reorder: (newOrder) =>
 		set((state) => {
-			const [startOfList, todoListToAlter, endOfList] = splitArrayByIdentifiable(state.todoLists, todoListId);
-
-			const newMiddleTodoList: TodoList = {
-				...todoListToAlter,
+			return {
+				...state,
 				todos: newOrder
-					.map((todoId) => todoListToAlter.todos.find((todo) => todo.id === todoId))
+					.map((todoId) => state.todos.find((todo) => todo.id === todoId))
 					.filter((todo): todo is Todo => todo !== undefined),
 			};
-
-			return { ...state, todoLists: [...startOfList, newMiddleTodoList, ...endOfList] };
 		}),
 }));

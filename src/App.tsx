@@ -6,6 +6,10 @@ import { clsx } from 'clsx';
 
 export function App() {
 	const todoLists = useStore((state) => state.todoLists);
+	const todos = useStore((state) => state.todos);
+
+	const todoListIds = todoLists.map(({ id }) => id);
+	const orphanedTodos = todos.filter((todo) => !todoListIds.includes(todo.parentId));
 
 	return (
 		<div className={clsx('flex', 'flex-col', 'h-screen')}>
@@ -29,8 +33,16 @@ export function App() {
 				)}
 			>
 				{todoLists.map((todoList) => (
-					<TodoList key={todoList.id} {...todoList} />
+					<TodoList
+						key={todoList.id}
+						{...todoList}
+						todos={todos.filter((todo) => todo.parentId === todoList.id)}
+					/>
 				))}
+
+				{Boolean(orphanedTodos.length) && (
+					<TodoList key={'orphans'} id={'orphans'} name={'Orphans'} todos={orphanedTodos} />
+				)}
 			</div>
 		</div>
 	);

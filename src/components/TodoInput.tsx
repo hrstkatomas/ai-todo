@@ -5,14 +5,15 @@ import { clsx } from 'clsx';
 import React, { useState } from 'react';
 
 export function TodoInput() {
-	// TODO: Rename to PromptInput
+	// TODO:  Rename to PromptInput
 	const [newTodoTitle, setNewTodoTitle] = useState('');
 
 	const todoLists = useStore((state) => state.todoLists);
+	const todos = useStore((state) => state.todos);
 	const actions = useStore();
 
 	const handleNewTodoSubmit = () => {
-		askAgent(newTodoTitle, { todoLists }, actions);
+		askAgent(newTodoTitle, { todoLists, todos }, actions);
 	};
 
 	return (
